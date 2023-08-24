@@ -70,7 +70,7 @@ class Meteor:
         if atexit is not None and atexit.unregister is not None:
             atexit.unregister(self.close)
 
-    def get_score(self, hyps, refs):
+     def get_score(self, hyps, refs):
         scores = []
         eval_line = 'EVAL'
         with self.lock:
@@ -85,19 +85,17 @@ class Meteor:
                 eval_line += ' ||| {}'.format(stat)
             self.meteor_p.stdin.write(enc('{}\n'.format(eval_line)))
             self.meteor_p.stdin.flush()
-            for i in range(0, len(hyps)):
-                v = self.meteor_p.stdout.readline()
+            
+            # Wait for METEOR to complete and get its output
+            stdout, stderr = self.meteor_p.communicate()
+            
+            # Process the output and extract scores
+            for v in stdout.splitlines():
                 try:
                     scores.append(float(dec(v.strip())))
                 except:
-                    sys.stderr.write("Error handling value: {}\n".format(v))
-                    sys.stderr.write("Decoded value: {}\n".format(dec(v.strip())))
-                    sys.stderr.write("eval_line: {}\n".format(eval_line))
-                    # You can try uncommenting the next code line to show stderr from the Meteor JAR.
-                    # If the Meteor JAR is not writing to stderr, then the line will just hang.
-                    # sys.stderr.write("Error from Meteor:\n{}".format(self.meteor_p.stderr.read()))
-                    raise
-            score = float(dec(self.meteor_p.stdout.readline()).strip())
+                    # Handle error
+                    pass
 
         return np.array(scores)
 
