@@ -496,15 +496,23 @@ class TransformersQG:
             else:
                 return [self.spacy_module.keyword(c, num_questions) for c in context]
         single_input = type(context) is str
+        print(single_input)
         context = [context] if single_input else context
+        print(context)
         list_sentences = [self.spacy_module.sentence(c) for c in context]  # split into sentence
+        print(list_sentences)
         list_inputs = [[c] * len(s) for c, s in zip(context, list_sentences)]
+        print(list_inputs)
         list_length = [0] + np.cumsum([len(s) for s in list_sentences]).tolist()
+        print(list_length)
         if sentence_level:
             list_inputs = list_sentences
+            print(list_inputs)
         # flatten inputs
         flat_sentences = list(chain(*list_sentences))
+        print(flat_sentences)
         flat_inputs = list(chain(*list_inputs))
+        print(flat_inputs)
         if self.answer_model_type == 'multitask':
             answer = self.generate_prediction(
                 flat_inputs,  # list_input,
@@ -528,10 +536,14 @@ class TransformersQG:
             raise ValueError(f"unknown answer model type: {self.answer_model_type}")
         # return to nested list
         answer = [clean(a) for a in answer]
+        print(answer)
         list_answer = [answer[list_length[n - 1]:list_length[n]] for n in range(1, len(list_length))]
+        print("List1:",list_answer)
         list_answer = [[a for a, c in zip(a_sent, c_sent) if a is not None and a in c]
                        for a_sent, c_sent in zip(list_answer, list_inputs)]
+        print("List2:",list_answer)
         list_answer = [None if len(a) == 0 else a for a in list_answer]
+        print("List3:",list_answer)
         if not self.drop_answer_error_text:
             if any(a is None for a in list_answer):
                 raise AnswerNotFoundError([context[n] for n, a in enumerate(list_answer) if a is None][0])
